@@ -1,0 +1,18 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Power BI temp files
+*.pbix.bak
+~$*.pbix
+
+# Data that shouldn't be versioned if it gets large/sensitive later
+# (uncomment if needed)
+# data/raw/*
