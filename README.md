@@ -27,8 +27,8 @@ silently fixing or guessing:
   row silently failed to load through MySQL Workbench's Import Wizard
   (no error shown) because of a blank numeric field. It was only caught
   because the staging→model row counts didn't reconcile — see
-  [`docs/data_audit_notes.md`](docs/data_audit_notes.md) for the full
-  diagnosis and fix.
+  [`brightcart-task1/docs/data_audit_notes.md`](brightcart-task1/docs/data_audit_notes.md)
+  for the full diagnosis and fix.
 - **Referential integrity enforced, not assumed**: a staging layer with no
   constraints feeds a modeled layer (`dim_`/`fact_`) with primary/foreign
   keys, and every load is validated with orphan-key and duplicate checks
@@ -37,18 +37,21 @@ silently fixing or guessing:
 ## Pipeline
 
 ```
-raw CSVs (data/raw/)
+raw CSVs (brightcart-task1/data/raw/)
    → clean_data.py (pandas: standardize, flag, never silently alter)
-   → clean CSVs (data/clean/)
+   → clean CSVs (brightcart-task1/data/clean/)
    → stg_* tables (no constraints, MySQL)
    → dim_*/fact_* tables (constrained model, MySQL)
    → validation checks (row counts, orphan FKs, duplicates)
    → reporting queries
 ```
 
-Full run order is documented in [`sql/02_load_notes.md`](sql/02_load_notes.md).
+Full run order is documented in
+[`brightcart-task1/sql/02_load_notes.md`](brightcart-task1/sql/02_load_notes.md).
 
 ## Structure
+
+All project files live under [`brightcart-task1/`](brightcart-task1/):
 
 | Path | What's in it |
 |---|---|
@@ -67,7 +70,7 @@ Full run order is documented in [`sql/02_load_notes.md`](sql/02_load_notes.md).
 
 ## Key findings
 
-See [`reports/summary.md`](reports/summary.md) for the full write-up.
+See [`brightcart-task1/reports/summary.md`](brightcart-task1/reports/summary.md) for the full write-up.
 Headline: 12.5% of transactions (50 of 400) have no usable quantity
 and/or price — a systematic point-of-sale capture gap, not random noise,
 worth escalating before trusting any revenue figure from this data.
