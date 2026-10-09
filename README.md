@@ -1,34 +1,81 @@
-# BI Client Reporting Pipeline
+# BrightCart Sales & Inventory Data Pipeline
 
-Practice portfolio project simulating a freelance client engagement: raw multi-table
-business data (sales, inventory, customer communications) → cleaned and validated →
-loaded into MySQL → modeled and reported in Power BI.
+End-to-end data cleaning, relational modeling, and reporting project built
+from raw retail exports — sales transactions, inventory, and store
+locations for a fictional multi-branch retailer (BrightCart) in Cagayan de
+Oro, Philippines.
+
+**Stack:** Python (pandas) for cleaning → MySQL for staging/modeling →
+SQL for validation and reporting.
+
+## What this project demonstrates
+
+Raw exports are never clean. This project works through the kind of
+messy, ambiguous data an analyst actually gets handed — not a
+pre-cleaned tutorial dataset — and documents every decision instead of
+silently fixing or guessing:
+
+- **Mixed formats and inconsistent casing** across dates, store IDs, and
+  categorical fields, standardized before any grouping or joins.
+- **A genuine data conflict**: a duplicate product record with two
+  different `stock_on_hand` *and* `category` values, with no way to know
+  which is correct — flagged for the client rather than silently picked.
+- **Ambiguous values treated as questions, not errors**: negative
+  quantities (returns? entry errors?) and missing customer types are
+  flagged and preserved, not deleted or defaulted.
+- **A real import failure caught by validation, not luck**: one inventory
+  row silently failed to load through MySQL Workbench's Import Wizard
+  (no error shown) because of a blank numeric field. It was only caught
+  because the staging→model row counts didn't reconcile — see
+  [`docs/data_audit_notes.md`](docs/data_audit_notes.md) for the full
+  diagnosis and fix.
+- **Referential integrity enforced, not assumed**: a staging layer with no
+  constraints feeds a modeled layer (`dim_`/`fact_`) with primary/foreign
+  keys, and every load is validated with orphan-key and duplicate checks
+  before being trusted.
+
+## Pipeline
+
+```
+raw CSVs (data/raw/)
+   → clean_data.py (pandas: standardize, flag, never silently alter)
+   → clean CSVs (data/clean/)
+   → stg_* tables (no constraints, MySQL)
+   → dim_*/fact_* tables (constrained model, MySQL)
+   → validation checks (row counts, orphan FKs, duplicates)
+   → reporting queries
+```
+
+Full run order is documented in [`sql/02_load_notes.md`](sql/02_load_notes.md).
 
 ## Structure
 
-```
-data/raw/       Untouched source exports. Never edited in place.
-data/clean/     Output of cleaning scripts only — never hand-edited.
-scripts/        Python (pandas) cleaning and transformation scripts.
-sql/            MySQL schema, load scripts, validation/QA queries.
-dashboards/     Power BI (.pbix) files.
-docs/           ERDs, flowcharts, business-rule notes, assumptions logs.
-reports/        Final client-facing summaries (plain-language findings).
-```
+| Path | What's in it |
+|---|---|
+| `data/raw/` | Original, untouched exports |
+| `data/clean/` | Cleaned CSVs, output of `clean_data.py` |
+| `scripts/clean_data.py` | Cleaning logic, with every decision logged |
+| `sql/01_schema.sql` | Staging + modeled table definitions |
+| `sql/02_load_notes.md` | How to load the data (and what went wrong) |
+| `sql/03_build_model.sql` | Staging → modeled table build |
+| `sql/04_validation.sql` | Row count, orphan-key, duplicate checks |
+| `sql/05_reporting_queries.sql` | Revenue, category, low-stock queries |
+| `sql/06_insert_stg_sales_direct.sql` | Fix for a failed sales CSV import |
+| `sql/07_fix_stg_product_prd2003.sql` | Fix for a failed inventory row |
+| `docs/data_audit_notes.md` | Full data audit — every issue found, and why each decision was made |
+| `reports/summary.md` | Findings written for a non-technical stakeholder |
 
-## Workflow
+## Key findings
 
-1. Raw data lands in `data/raw/` — treated as read-only.
-2. `scripts/` clean and standardize it (formats, duplicates, missing values,
-   category normalization), writing results to `data/clean/`.
-3. `sql/` loads the cleaned data into MySQL and models it (fact/dimension tables),
-   plus validation queries (row counts, duplicate checks, referential integrity).
-4. `dashboards/` holds the Power BI file built on top of the modeled data.
-5. `reports/` holds the plain-language write-up: findings + one recommendation,
-   written for a non-technical stakeholder.
+See [`reports/summary.md`](reports/summary.md) for the full write-up.
+Headline: 12.5% of transactions (50 of 400) have no usable quantity
+and/or price — a systematic point-of-sale capture gap, not random noise,
+worth escalating before trusting any revenue figure from this data.
 
-## Log
+## Why document the mistakes too
 
-- 2026-09-30: Project scaffolded. Replaces the earlier Riot Games API project as
-  the active portfolio piece — this one mirrors real freelance client work
-  (data cleaning, SQL modeling, Power BI reporting, client-facing summaries).
+The `sql/06_*` and `sql/07_*` fix scripts exist because the Import Wizard
+reported success while silently dropping rows. Catching that wasn't
+luck — it came from validating row counts after every load step instead
+of trusting a green checkmark. That habit is the actual point of this
+project.
