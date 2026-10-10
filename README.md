@@ -82,3 +82,16 @@ reported success while silently dropping rows. Catching that wasn't
 luck — it came from validating row counts after every load step instead
 of trusting a green checkmark. That habit is the actual point of this
 project.
+
+## Dashboard
+
+A Power BI dashboard built on the modeled `dim_*`/`fact_*` tables:
+[`brightcart-task1/dashboards/brightcart_dashboard.pdf`](brightcart-task1/dashboards/brightcart_dashboard.pdf)
+(PDF export — open the `.pbix` in the same folder for the interactive version).
+
+- **Overview page**: total revenue, transaction counts, and revenue by
+  store and category.
+- **Data Quality page**: the same exclusions documented in the audit —
+  low-stock items, negative-quantity transactions, and rows with missing
+  quantity/price — made visible as filtered tables instead of being
+  dropped from the numbers silently.
